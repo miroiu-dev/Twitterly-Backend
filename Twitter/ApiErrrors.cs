@@ -14,6 +14,7 @@
         public const string USER_DOESNT_EXIST = "The provided email is not associated with an account";
         public const string SOMETHIG_WENT_WRONG = "Ooops! Something went wrong, please try again later";
         public const string INVALID_TOKEN = "This session expired. Please try again later";
+        public const string ALREADY_SENT = "Email already sent. Please verify your email!";
     }
     record AuthenticationError(string Message);
 }

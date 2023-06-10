@@ -18,6 +18,7 @@ namespace Twitter.Services
         Task<ResetToken?> GetAndConsumeTokenAsync(string token);
         Task UpdatePasswordAsync(int id, string password);
         bool VerifyPassword(string password, string hash);
+        Task<bool> IsTokenAlreadySent(int userId);
         ClaimsPrincipal CreateUserIdentity(string email, int Id);
         Task SendResetPasswordEmailAsync(EmailDto email);
     }

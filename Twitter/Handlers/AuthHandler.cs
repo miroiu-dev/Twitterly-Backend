@@ -21,9 +21,9 @@ namespace Twitter.Handlers
                 return Results.Json(new AuthenticationError(SignInError.INVALID_USER_PASSWORD), statusCode: StatusCodes.Status401Unauthorized);
             }
 
-            var userIdentity = authService.CreateUserIdentity(user.Email, user.Id);  
+            var userIdentity = authService.CreateUserIdentity(user.Email, user.Id);
 
-            await ctx.HttpContext!.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, principal: userIdentity) ;
+            await ctx.HttpContext!.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, principal: userIdentity);
 
             return Results.Ok(new UserDto
             {
@@ -68,11 +68,13 @@ namespace Twitter.Handlers
             return Results.SignOut(authenticationSchemes: new List<string> { CookieAuthenticationDefaults.AuthenticationScheme });
         }
 
-        public static async Task<IResult> SendResetEmail(string email, IAuthService authService)
+        public static async Task<IResult> SendResetEmail(string email, IAuthService authService, IConfiguration config)
         {
             UserDto? user = await authService.GetUserAsync(email, user => new UserDto { Id = user.Id, FirstName = user.FirstName, LastName = user.LastName, Handle = user.Handle });
 
             if (user is null) return Results.NotFound(new AuthenticationError(ResetError.USER_DOESNT_EXIST));
+
+            if (await authService.IsTokenAlreadySent(user.Id)) return Results.Conflict(new AuthenticationError(ResetError.ALREADY_SENT));
 
             string token = authService.GenerateResetToken();
 
@@ -89,8 +91,8 @@ namespace Twitter.Handlers
                 {
                     From = new EmailAddress
                     {
-                        Email = "twitterservicesnoreply@gmail.com",
-                        Name = "Twitter Services"
+                        Email = config.GetValue<string>("Secrets:Email:From"),
+                        Name = "Twitterly"
                     },
                     To = new EmailAddress
                     {

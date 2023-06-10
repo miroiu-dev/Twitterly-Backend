@@ -5,9 +5,6 @@ using Twitter.Services;
 using Twitter;
 using SendGrid.Extensions.DependencyInjection;
 
-const string connectionString = "server=localhost;database=twitter;user=root;password=root";
-const string sendGridApiKey = "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";
-
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme).
@@ -31,13 +28,13 @@ builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationSc
 builder.Services.AddAuthorization(options =>
 {
 });
-builder.Services.AddDbContext<UserContext>(options => options.UseMySQL(connectionString));
+builder.Services.AddDbContext<UserContext>(options => options.UseMySQL(builder.Configuration.GetValue<string>("Secrets:Database")!));
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<ITweetService, TweetService>();
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddSendGrid(options =>
 {
-    options.ApiKey = sendGridApiKey;
+    options.ApiKey = builder.Configuration.GetValue<string>("Secrets:Email:ApiKey");
 });
 
 

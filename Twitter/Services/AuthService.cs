@@ -17,11 +17,13 @@ namespace Twitter.Services
         private readonly IHttpContextAccessor _httpCtx;
         private readonly UserContext _ctx;
         private readonly ISendGridClient _client;
-        public AuthService(IHttpContextAccessor httpCtx, ISendGridClient client, UserContext ctx)
+        private readonly IConfiguration _config;
+        public AuthService(IHttpContextAccessor httpCtx, ISendGridClient client, IConfiguration config, UserContext ctx)
         {
             _httpCtx = httpCtx;
             _ctx = ctx;
             _client = client;
+            _config = config;
         }
         public async Task<User?> GetUserAsync(string email) =>
             await _ctx.Users.Where(user => user.Email == email).Include(user => user.Country).FirstOrDefaultAsync();
@@ -38,14 +40,19 @@ namespace Twitter.Services
         }
         private string GetCountryNameFromIp()
         {
-            string defaultIpAddress = "192.168.0.1";
-            var ipAddress = _httpCtx.HttpContext!.Connection.LocalIpAddress;
-            var ip = ipAddress is null ? defaultIpAddress : ipAddress.ToString();
 
-            IPGeolocationAPI api = new("ee4318027c424fb79dee1e6a0916bb0b");
+            var ipAddress = _httpCtx.HttpContext!.Connection.LocalIpAddress;
+            var defaultIp = _config.GetValue<string>("DefaultIp")!;
+
+            string ip = defaultIp;
+
+            if (_config.GetValue<string>("Environment") != "Development")
+                ip = ipAddress?.ToString() ?? defaultIp;
+
+            IPGeolocationAPI api = new(_config.GetValue<string>("Secrets:CountryApiKey"));
 
             GeolocationParams geoParams = new();
-            geoParams.SetIPAddress("212.87.229.35");
+            geoParams.SetIPAddress(ip);
             geoParams.SetFields("geo");
 
             Geolocation? geolocation = (Geolocation?)api.GetGeolocation(geoParams).GetValueOrDefault("response");
@@ -83,7 +90,7 @@ namespace Twitter.Services
             var message = new SendGridMessage()
             {
                 From = email.From,
-                TemplateId = "d-05a520310e6f41f99fe3b5fd91923313"
+                TemplateId = _config.GetValue<string>("Secrets:Email:TemplateId")
             };
 
             message.SetTemplateData(email.Tags);
@@ -99,6 +106,11 @@ namespace Twitter.Services
             user!.Password = password;
 
             await _ctx.SaveChangesAsync();
+        }
+
+        public async Task<bool> IsTokenAlreadySent(int userId)
+        {
+            return await _ctx.ResetTokens.Where(token => token.UserId == userId).AnyAsync();
         }
 
         public async Task<ResetToken?> GetAndConsumeTokenAsync(string token)
