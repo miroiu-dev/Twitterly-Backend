@@ -85,20 +85,6 @@ namespace Twitter.Services
             await _ctx.SaveChangesAsync();
         }
 
-        public async Task SendResetPasswordEmailAsync(EmailDto email)
-        {
-            var message = new SendGridMessage()
-            {
-                From = email.From,
-                TemplateId = _config.GetValue<string>("Secrets:Email:TemplateId")
-            };
-
-            message.SetTemplateData(email.Tags);
-            message.AddTo(email.To);
-
-            await _client.SendEmailAsync(message);
-        }
-
         public async Task UpdatePasswordAsync(int id, string password)
         {
             var user = await _ctx.Users.FirstOrDefaultAsync(user => user.Id == id);

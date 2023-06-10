@@ -16,7 +16,7 @@ namespace Twitter
             auth.MapPost("/sign-up", AuthHandler.SignUp).AllowAnonymous().AddEndpointFilter<ValidateEndpointFilter<SignUpValidator, SignUpDto>>();
             auth.MapDelete("/sign-out", AuthHandler.SignOut).AllowAnonymous();
             auth.MapPost("/reset", AuthHandler.SendResetEmail).AllowAnonymous();
-            auth.MapPost("/reset/{token}", AuthHandler.ResetPassword).RequireAuthorization().AddEndpointFilter<ValidateEndpointFilter<ResetPasswordValidator, ResetPasswordDto>>();
+            auth.MapPost("/reset/{token}", AuthHandler.ResetPassword).AllowAnonymous().AddEndpointFilter<ValidateEndpointFilter<ResetPasswordValidator, ResetPasswordDto>>();
             tweet.MapPost("/", TweetHandler.PostTweet).RequireAuthorization();
             tweet.MapGet("/profile", TweetHandler.GetProfileTweets).RequireAuthorization();
             tweet.MapPost("/like/{id}", TweetHandler.Like).RequireAuthorization();

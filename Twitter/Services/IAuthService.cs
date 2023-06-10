@@ -20,6 +20,5 @@ namespace Twitter.Services
         bool VerifyPassword(string password, string hash);
         Task<bool> IsTokenAlreadySent(int userId);
         ClaimsPrincipal CreateUserIdentity(string email, int Id);
-        Task SendResetPasswordEmailAsync(EmailDto email);
     }
 }

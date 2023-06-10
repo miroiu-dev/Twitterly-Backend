@@ -31,6 +31,7 @@ builder.Services.AddAuthorization(options =>
 builder.Services.AddDbContext<UserContext>(options => options.UseMySQL(builder.Configuration.GetValue<string>("Secrets:Database")!));
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<ITweetService, TweetService>();
+builder.Services.AddScoped<IEmailService, EmailService>();
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddSendGrid(options =>
 {

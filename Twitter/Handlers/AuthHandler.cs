@@ -3,7 +3,6 @@ using Twitter.Dtos;
 using Twitter.Models;
 using Twitter.Services;
 using Twitter.ApiErrors;
-using SendGrid.Helpers.Mail;
 using Microsoft.AspNetCore.Authentication;
 
 namespace Twitter.Handlers
@@ -68,7 +67,7 @@ namespace Twitter.Handlers
             return Results.SignOut(authenticationSchemes: new List<string> { CookieAuthenticationDefaults.AuthenticationScheme });
         }
 
-        public static async Task<IResult> SendResetEmail(string email, IAuthService authService, IConfiguration config)
+        public static async Task<IResult> SendResetEmail(string email, IAuthService authService, IEmailService emailService, IConfiguration config)
         {
             UserDto? user = await authService.GetUserAsync(email, user => new UserDto { Id = user.Id, FirstName = user.FirstName, LastName = user.LastName, Handle = user.Handle });
 
@@ -85,13 +84,20 @@ namespace Twitter.Handlers
                 UserId = user.Id,
             });
 
+
             try
             {
-                await authService.SendResetPasswordEmailAsync(new EmailDto
+                var parameters = new Dictionary<string, object>
+                {
+                    { "Token", token },
+                    { "Handle", user.Handle }
+                };
+
+                emailService.SendEmailAsync(new EmailDto
                 {
                     From = new EmailAddress
                     {
-                        Email = config.GetValue<string>("Secrets:Email:From"),
+                        Email = config.GetValue<string>("Secrets:Email:From")!,
                         Name = "Twitterly"
                     },
                     To = new EmailAddress
@@ -99,12 +105,8 @@ namespace Twitter.Handlers
                         Email = email,
                         Name = user.FullName
                     },
-                    Tags = new
-                    {
-                        user.Handle,
-                        Token = token,
-                    }
-                });
+                    Params = parameters
+                }, config.GetValue<long>("Secrets:Email:TemplateId"));
             }
             catch (Exception)
             {
